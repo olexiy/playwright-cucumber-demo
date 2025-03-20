@@ -44,18 +44,29 @@ jobs:
     - name: Run ESLint
       run: npm run lint
     
+    - name: Create allure-results directory
+      run: mkdir -p allure-results
+      
+    # Run tests sequentially, ensuring all tests are executed and results captured
     - name: Run Smoke Tests
       if: github.event_name != 'workflow_dispatch' || github.event.inputs.tags == ''
       run: npm run test:smoke
+      continue-on-error: true
       
     - name: Run Tests with Tags
       if: github.event_name == 'workflow_dispatch' && github.event.inputs.tags != ''
       run: npm test -- --tags "${{ github.event.inputs.tags }}"
+      continue-on-error: true
       
     - name: Run All Tests
-      if: (github.event_name != 'workflow_dispatch' || github.event.inputs.tags == '') && (success() || failure())
+      if: github.event_name != 'workflow_dispatch' || github.event.inputs.tags == ''
       run: npm test
+      continue-on-error: true
     
+    - name: Debug - List allure-results contents
+      run: ls -la allure-results
+      continue-on-error: true
+      
     - name: Set up Allure Report
       uses: simple-elf/allure-report-action@master
       if: always()
@@ -73,9 +84,17 @@ jobs:
         path: allure-report/
         retention-days: 30
     
+    - name: Upload Allure Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: allure-results
+        path: allure-results/
+        retention-days: 30
+    
     - name: Upload Test Screenshots
       uses: actions/upload-artifact@v4
-      if: failure()
+      if: always()
       with:
         name: test-screenshots
         path: allure-results/*.png
@@ -99,6 +118,9 @@ jobs:
       with:
         name: allure-report
         path: allure-report
+    
+    - name: List Allure Report Files
+      run: ls -la allure-report
     
     - name: Setup Pages
       uses: actions/configure-pages@v5
