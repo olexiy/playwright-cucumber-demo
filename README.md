@@ -210,7 +210,7 @@ You can manually trigger the test workflow:
 
 After each workflow run, the Allure report is automatically published to GitHub Pages.
 
-Access your latest test report at: **https://[your-username].github.io/[repository-name]/**
+Access your latest test report at: **https://olexiy.github.io/playwright-cucumber-demo/**
 
 This link will always show the latest test results from your most recent workflow run.
 
