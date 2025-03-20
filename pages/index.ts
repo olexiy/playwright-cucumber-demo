@@ -3,7 +3,7 @@ import TodoPage from './TodoPage';
 import FormPage from './FormPage';
 
 export {
-    BasePage,
-    TodoPage,
-    FormPage
+  BasePage,
+  TodoPage,
+  FormPage
 }; 

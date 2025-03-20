@@ -10,7 +10,9 @@
     "report:generate": "allure generate ./allure-results --clean",
     "report:open": "allure open ./allure-report",
     "report:serve": "allure serve ./allure-results",
-    "test:smoke": "cucumber-js --require-module ts-node/register --require features/step_definitions/**/*.ts --require features/support/**/*.ts --tags @smoke"
+    "test:smoke": "cucumber-js --require-module ts-node/register --require features/step_definitions/**/*.ts --require features/support/**/*.ts --tags @smoke",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix"
   },
   "keywords": [],
   "author": "",
@@ -19,7 +21,10 @@
     "@cucumber/cucumber": "^10.3.1",
     "@playwright/test": "^1.42.1",
     "@types/node": "^20.11.24",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
     "allure-playwright": "^2.10.0",
+    "eslint": "^8.56.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }

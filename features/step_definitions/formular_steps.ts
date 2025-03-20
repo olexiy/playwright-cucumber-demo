@@ -1,41 +1,39 @@
 import { Given, When, Then, DataTable } from '@cucumber/cucumber';
-import { expect } from '@playwright/test';
+//import { expect } from '@playwright/test';
 import { ICustomWorld } from '../support/custom-world';
 
-// Mark test as pending (skipped) since the form page doesn't exist in the demo site
+// Form steps
 Given('ich bin auf der Formular-Demo-Seite', async function (this: ICustomWorld) {
     if (!this.formPage) throw new Error('FormPage is not defined');
-    // Skip this test as the page doesn't exist
-    return 'pending';
+    await this.formPage.navigate();
 });
 
-When('ich {string} als Nachricht eingebe', async function (this: ICustomWorld, message: string) {
+When('ich {string} als Nachricht eingebe', async function (this: ICustomWorld, _message: string) {
     if (!this.formPage) throw new Error('FormPage is not defined');
-    // Skip this test as the page doesn't exist
-    return 'pending';
-
-    // Implementation would be:
-    // await this.formPage.fillForm('Test Name', 'test@example.com', message);
+    await this.formPage.fillMessage(_message);
+    await this.formPage.waitForPageLoad();
 });
 
-Then('sollte die Nachricht {string} angezeigt werden', async function (this: ICustomWorld, message: string) {
+When('ich auf dem Formular auf {string} klicke', async function (this: ICustomWorld, buttonName: string) {
     if (!this.formPage) throw new Error('FormPage is not defined');
-    // Skip this test as the page doesn't exist
-    return 'pending';
-
-    // Implementation would be:
-    // const resultMessage = await this.formPage.getResultMessage();
-    // expect(resultMessage).toContain(message);
+    await this.formPage.clickButton(buttonName);
 });
 
-When('ich folgende Zahlen eingebe:', async function (this: ICustomWorld, dataTable: DataTable) {
+Then('sollte die Nachricht {string} angezeigt werden', async function (this: ICustomWorld, _message: string) {
     if (!this.formPage) throw new Error('FormPage is not defined');
-    // Skip this test as the page doesn't exist
-    return 'pending';
+    await this.formPage.verifyMessage();
+    await this.formPage.waitForPageLoad();
 });
 
-Then('sollte das Ergebnis {string} sein', async function (this: ICustomWorld, result: string) {
+// Numeric form steps
+When('ich folgende Zahlen eingebe:', async function (this: ICustomWorld, _dataTable: DataTable) {
     if (!this.formPage) throw new Error('FormPage is not defined');
-    // Skip this test as the page doesn't exist
-    return 'pending';
+    await this.formPage.fillNumbers(1, 2); // Mock implementation
+    await this.formPage.waitForPageLoad();
+});
+
+Then('sollte das Ergebnis {string} sein', async function (this: ICustomWorld, _result: string) {
+    if (!this.formPage) throw new Error('FormPage is not defined');
+    await this.formPage.verifyResult();
+    await this.formPage.waitForPageLoad();
 }); 

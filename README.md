@@ -39,6 +39,20 @@ npm run test:debug
 npm test -- --tags "@todo and not @edit"
 ```
 
+## Code Quality
+
+### Linting
+
+The project uses ESLint with TypeScript support for code quality.
+
+```bash
+# Run linting
+npm run lint
+
+# Fix linting issues automatically where possible
+npm run lint:fix
+```
+
 ## Allure Reporting
 
 ### Generate Allure report
@@ -71,6 +85,7 @@ npm run report:serve
 - `playwright.config.ts` - Playwright configuration
 - `allure-results/` - Contains raw Allure report data
 - `allure-report/` - Contains generated Allure reports
+- `.eslintrc.js` - ESLint configuration
 
 ## Test Examples
 

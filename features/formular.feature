@@ -8,7 +8,7 @@ Funktionalität: Formular Handhabung
   Szenario: Einfache Nachricht eingeben
     Angenommen ich bin auf der Formular-Demo-Seite
     Wenn ich "Hallo Playwright!" als Nachricht eingebe
-    Und ich auf "Wert abrufen" klicke
+    Und ich auf dem Formular auf "Wert abrufen" klicke
     Dann sollte die Nachricht "Hallo Playwright!" angezeigt werden
 
   @calculation
@@ -17,5 +17,5 @@ Funktionalität: Formular Handhabung
     Wenn ich folgende Zahlen eingebe:
       | Erste Zahl | Zweite Zahl |
       | 5          | 7           |
-    Und ich auf "Summe berechnen" klicke
+    Und ich auf dem Formular auf "Summe berechnen" klicke
     Dann sollte das Ergebnis "12" sein 
