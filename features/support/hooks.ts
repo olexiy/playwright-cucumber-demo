@@ -9,7 +9,10 @@ const PLAYWRIGHT_DEMO_URL = 'https://demo.playwright.dev';
 const DEMOQA_URL = 'https://demoqa.com';
 
 BeforeAll(async function () {
-  browser = await chromium.launch({ headless: false });
+  // Use headless mode in CI environments
+  browser = await chromium.launch({
+    headless: process.env.CI === 'true' || false
+  });
 });
 
 AfterAll(async function () {
