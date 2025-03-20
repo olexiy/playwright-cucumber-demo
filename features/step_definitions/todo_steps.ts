@@ -3,78 +3,75 @@ import { expect } from '@playwright/test';
 import { ICustomWorld } from '../support/custom-world';
 
 Given('ich bin auf der TodoMVC Seite', async function (this: ICustomWorld) {
-    if (!this.page) throw new Error('Page is not defined');
-    await this.page.goto('/todomvc/');
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
+    await this.todoPage.goto();
 });
 
 When('ich {string} als neue Aufgabe eingebe', async function (this: ICustomWorld, task: string) {
-    if (!this.page) throw new Error('Page is not defined');
-    await this.page.getByPlaceholder('What needs to be done?').fill(task);
-    await this.page.getByPlaceholder('What needs to be done?').press('Enter');
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
+    await this.todoPage.addTodo(task);
 });
 
 Then('sollte die Aufgabe in der Liste erscheinen', async function (this: ICustomWorld) {
-    if (!this.page) throw new Error('Page is not defined');
-    await expect(this.page.locator('.todo-list li')).toHaveCount(1);
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
+    await expect(this.todoPage.getTodoItems()).toHaveCount(1);
 });
 
 When('ich die Aufgabe als erledigt markiere', async function (this: ICustomWorld) {
-    if (!this.page) throw new Error('Page is not defined');
-    await this.page.locator('.todo-list li').getByRole('checkbox').click();
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
+    await this.todoPage.markAsCompleted(0);
 });
 
 Then('sollte die Aufgabe als erledigt angezeigt werden', async function (this: ICustomWorld) {
-    if (!this.page) throw new Error('Page is not defined');
-    await expect(this.page.locator('.todo-list li')).toHaveClass(/completed/);
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
+    await expect(this.todoPage.getTodoItem(0)).toHaveClass(/completed/);
 });
 
 Given('ich habe folgende Aufgaben eingegeben:', async function (this: ICustomWorld, dataTable: DataTable) {
-    if (!this.page) throw new Error('Page is not defined');
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
     const tasks = dataTable.hashes().map((row: { [key: string]: string }) => row['Aufgabe']);
     for (const task of tasks) {
-        await this.page.getByPlaceholder('What needs to be done?').fill(task);
-        await this.page.getByPlaceholder('What needs to be done?').press('Enter');
+        await this.todoPage.addTodo(task);
     }
 });
 
 When('ich {string} als erledigt markiere', async function (this: ICustomWorld, task: string) {
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
     if (!this.page) throw new Error('Page is not defined');
-    await this.page.locator('.todo-list li').filter({ hasText: task }).getByRole('checkbox').click();
+    // Find the index of the task with the given text
+    const count = await this.todoPage.getTodoItems().count();
+    for (let i = 0; i < count; i++) {
+        const itemText = await this.todoPage.getTodoItem(i).textContent();
+        if (itemText?.includes(task)) {
+            await this.todoPage.markAsCompleted(i);
+            break;
+        }
+    }
 });
 
 When('ich auf {string} klicke', async function (this: ICustomWorld, buttonText: string) {
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
     if (!this.page) throw new Error('Page is not defined');
 
     const buttonMap: { [key: string]: string } = {
-        // Todo buttons/links
-        'Aktiv': 'Active',
-        'Erledigt': 'Completed',
-        'Alle': 'All',
-        'Erledigte löschen': 'Clear completed',
-
-        // Form buttons
-        'Wert abrufen': 'Get Value',
-        'Summe berechnen': 'Calculate',
-        'Senden': 'Submit'
+        'Aktiv': 'active',
+        'Erledigt': 'completed',
+        'Alle': 'all',
+        'Erledigte löschen': 'Clear completed'
     };
 
     const translatedText = buttonMap[buttonText] || buttonText;
 
-    try {
-        // Special case for TodoMVC filters
-        if (['Active', 'Completed', 'All'].includes(translatedText)) {
-            await this.page.locator(`a[href="#/${translatedText.toLowerCase()}"]`).click();
-        }
-        // Special case for Clear completed button
-        else if (translatedText === 'Clear completed') {
-            await this.page.locator('button.clear-completed').click();
-        }
-        // Default button handling
-        else {
-            await this.page.getByRole('button', { name: translatedText }).click();
-        }
-    } catch (error) {
-        // If specific selectors fail, try generic role selectors
+    // Handle special cases for TodoMVC filters
+    if (['all', 'active', 'completed'].includes(translatedText)) {
+        await this.todoPage.filterByStatus(translatedText as 'all' | 'active' | 'completed');
+    }
+    // Handle clear completed button
+    else if (translatedText === 'Clear completed') {
+        await this.todoPage.clearCompleted();
+    }
+    // Default button handling for form or other pages
+    else {
         try {
             await this.page.getByRole('button', { name: translatedText }).click();
         } catch (buttonError) {
@@ -84,62 +81,70 @@ When('ich auf {string} klicke', async function (this: ICustomWorld, buttonText: 
 });
 
 Then('sollte ich {int} Aufgabe(n) sehen', async function (this: ICustomWorld, count: number) {
-    if (!this.page) throw new Error('Page is not defined');
-    await expect(this.page.locator('.todo-list li')).toHaveCount(count);
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
+    await expect(this.todoPage.getTodoItems()).toHaveCount(count);
 });
 
 Then('{string} sollte (nicht )?sichtbar sein', async function (this: ICustomWorld, task: string, notVisible?: string) {
-    if (!this.page) throw new Error('Page is not defined');
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
+    const todoItem = this.todoPage.getTodoItemByText(task);
+
     if (notVisible) {
-        await expect(this.page.locator('.todo-list li').filter({ hasText: task })).not.toBeVisible();
+        await expect(todoItem).not.toBeVisible();
     } else {
-        await expect(this.page.locator('.todo-list li').filter({ hasText: task })).toBeVisible();
+        await expect(todoItem).toBeVisible();
     }
 });
 
 When('ich die Aufgabe doppelklicke', async function (this: ICustomWorld) {
-    if (!this.page) throw new Error('Page is not defined');
-    await this.page.locator('.todo-list li label').dblclick();
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
+    // Since we're not specifying which task, we'll use the first one
+    await this.todoPage.getTodoItem(0).locator('label').dblclick();
 });
 
 When('ich den Text zu {string} ändere', async function (this: ICustomWorld, newText: string) {
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
     if (!this.page) throw new Error('Page is not defined');
+
+    // Editing the currently active task
     await this.page.locator('.todo-list li .edit').fill(newText);
     await this.page.locator('.todo-list li .edit').press('Enter');
 });
 
 Then('sollte die Aufgabe als {string} angezeigt werden', async function (this: ICustomWorld, text: string) {
-    if (!this.page) throw new Error('Page is not defined');
-    await expect(this.page.locator('.todo-list li')).toHaveText(text);
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
+    await expect(this.todoPage.getTodoItem(0)).toHaveText(text);
 });
 
 When('ich alle Aufgaben als erledigt markiere', async function (this: ICustomWorld) {
-    if (!this.page) throw new Error('Page is not defined');
-    await this.page.locator('#toggle-all').click();
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
+    await this.todoPage.toggleAll();
 });
 
 Then('sollten alle Aufgaben als erledigt angezeigt werden', async function (this: ICustomWorld) {
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
     if (!this.page) throw new Error('Page is not defined');
+
+    // Check that all todo items have the completed class
     await expect(this.page.locator('.todo-list li.completed')).toHaveCount(3);
 });
 
 Then('sollte die Liste leer sein', async function (this: ICustomWorld) {
-    if (!this.page) throw new Error('Page is not defined');
-    await expect(this.page.locator('.todo-list li')).toHaveCount(0);
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
+    await expect(this.todoPage.getTodoItems()).toHaveCount(0);
 });
 
 Given('ich habe {string} als Aufgabe eingegeben', async function (this: ICustomWorld, task: string) {
-    if (!this.page) throw new Error('Page is not defined');
-    await this.page.getByPlaceholder('What needs to be done?').fill(task);
-    await this.page.getByPlaceholder('What needs to be done?').press('Enter');
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
+    await this.todoPage.addTodo(task);
 });
 
 Then('{string} sollte sichtbar sein', async function (this: ICustomWorld, task: string) {
-    if (!this.page) throw new Error('Page is not defined');
-    await expect(this.page.locator('.todo-list li').filter({ hasText: task })).toBeVisible();
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
+    await expect(this.todoPage.getTodoItemByText(task)).toBeVisible();
 });
 
 Then('{string} sollte nicht sichtbar sein', async function (this: ICustomWorld, task: string) {
-    if (!this.page) throw new Error('Page is not defined');
-    await expect(this.page.locator('.todo-list li').filter({ hasText: task })).not.toBeVisible();
+    if (!this.todoPage) throw new Error('TodoPage is not defined');
+    await expect(this.todoPage.getTodoItemByText(task)).not.toBeVisible();
 }); 

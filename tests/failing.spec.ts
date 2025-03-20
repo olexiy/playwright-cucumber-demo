@@ -1,33 +1,38 @@
 import { test, expect } from '@playwright/test';
+import { TodoPage } from '../pages';
 
 test.describe('Failing Tests for Report Demo', () => {
     test('should fail with screenshot', async ({ page }) => {
+        // Initialize the TodoPage
+        const todoPage = new TodoPage(page);
+
         // Step 1: Navigate to the TodoMVC app
-        await page.goto('/todomvc/');
+        await todoPage.goto();
 
         // Step 2: Add a todo item
-        await page.getByPlaceholder('What needs to be done?').fill('Failing Test Item');
-        await page.getByPlaceholder('What needs to be done?').press('Enter');
+        await todoPage.addTodo('Failing Test Item');
 
         // Step 3: Verify the todo item was added
-        await expect(page.locator('.todo-list li')).toHaveCount(1);
+        await expect(todoPage.getTodoItems()).toHaveCount(1);
 
         // Step 4: This step will fail - looking for a non-existent element
         await expect(page.locator('#non-existent-element')).toBeVisible({ timeout: 2000 });
     });
 
     test('should fail with wrong text', async ({ page }) => {
+        // Initialize the TodoPage
+        const todoPage = new TodoPage(page);
+
         // Step 1: Navigate to the TodoMVC app
-        await page.goto('/todomvc/');
+        await todoPage.goto();
 
         // Step 2: Add a todo item
-        await page.getByPlaceholder('What needs to be done?').fill('Another Test Item');
-        await page.getByPlaceholder('What needs to be done?').press('Enter');
+        await todoPage.addTodo('Another Test Item');
 
         // Step 3: Verify the todo item was added
-        await expect(page.locator('.todo-list li')).toHaveCount(1);
+        await expect(todoPage.getTodoItems()).toHaveCount(1);
 
         // Step 4: This step will fail - expecting the wrong text
-        await expect(page.locator('.todo-list li')).toHaveText('This text does not match');
+        await expect(todoPage.getTodoItem(0)).toHaveText('This text does not match');
     });
 }); 

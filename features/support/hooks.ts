@@ -1,6 +1,6 @@
 import { BeforeAll, AfterAll, Before, After, Status } from '@cucumber/cucumber';
 import { Browser, chromium } from '@playwright/test';
-import { ICustomWorld } from './custom-world';
+import { ICustomWorld, CustomWorld } from './custom-world';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -15,12 +15,15 @@ AfterAll(async function () {
     await browser.close();
 });
 
-Before(async function (this: ICustomWorld) {
+Before(async function (this: CustomWorld) {
     this.browser = browser;
     this.context = await browser.newContext({
         baseURL: BASE_URL
     });
     this.page = await this.context.newPage();
+
+    // Initialize page objects
+    this.initPageObjects();
 });
 
 After(async function (this: ICustomWorld, scenario) {
