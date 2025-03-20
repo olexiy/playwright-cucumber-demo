@@ -77,6 +77,22 @@ npm run lint
 npm run lint:fix
 ```
 
+### Pre-commit Hooks
+
+The project includes pre-commit hooks using Husky and lint-staged to ensure code quality:
+
+- Automatically runs ESLint on staged TypeScript files
+- Fixes auto-fixable linting issues
+- Prevents commits that would introduce code style errors
+
+This quality gate ensures that all committed code meets the project's style standards.
+
+If you need to bypass the hook in exceptional circumstances (not recommended):
+
+```bash
+git commit --no-verify -m "Your commit message"
+```
+
 ## Allure Reporting
 
 Allure Reports provide comprehensive test result visualization with rich details including screenshots, steps, and timing data.

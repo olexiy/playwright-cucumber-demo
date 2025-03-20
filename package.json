@@ -12,7 +12,9 @@
     "report:serve": "allure serve ./allure-results",
     "test:smoke": "cucumber-js --require-module ts-node/register --require features/step_definitions/**/*.ts --require features/support/**/*.ts --tags @smoke",
     "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix"
+    "lint:fix": "eslint . --ext .ts --fix",
+    "prepare": "husky install",
+    "pre-commit": "lint-staged"
   },
   "keywords": [],
   "author": "",
@@ -25,7 +27,12 @@
     "@typescript-eslint/parser": "^5.62.0",
     "allure-playwright": "^2.10.0",
     "eslint": "^8.56.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
+  },
+  "lint-staged": {
+    "*.ts": ["eslint --fix"]
   }
 }
