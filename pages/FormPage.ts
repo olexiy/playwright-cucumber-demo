@@ -1,4 +1,4 @@
-import { Locator } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
 import BasePage from './BasePage';
 
 export default class FormPage extends BasePage {
@@ -13,7 +13,7 @@ export default class FormPage extends BasePage {
     readonly resultMessage: Locator;
     readonly form: Locator;
 
-    constructor(page) {
+    constructor(page: Page) {
         super(page);
 
         // Initialize locators
@@ -79,7 +79,7 @@ export default class FormPage extends BasePage {
      */
     async hasValidationError(fieldName: string): Promise<boolean> {
         const field = this.page.locator(`#${fieldName}`);
-        return await field.evaluate(el => el.validity.valid === false);
+        return await field.evaluate((el: HTMLInputElement) => el.validity.valid === false);
     }
 
     /**
@@ -89,6 +89,6 @@ export default class FormPage extends BasePage {
      */
     async getValidationMessage(fieldName: string): Promise<string> {
         const field = this.page.locator(`#${fieldName}`);
-        return await field.evaluate(el => el.validationMessage);
+        return await field.evaluate((el: HTMLInputElement) => el.validationMessage);
     }
 } 

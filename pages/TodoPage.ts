@@ -1,4 +1,4 @@
-import { Locator } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
 import BasePage from './BasePage';
 
 export default class TodoPage extends BasePage {
@@ -16,9 +16,9 @@ export default class TodoPage extends BasePage {
   readonly filterCompleted: Locator;
   readonly toggleAllButton: Locator;
 
-  constructor(page) {
+  constructor(page: Page) {
     super(page);
-    
+
     // Initialize locators
     this.newTodoInput = page.getByPlaceholder('What needs to be done?');
     this.todoList = page.locator('.todo-list');
@@ -123,7 +123,7 @@ export default class TodoPage extends BasePage {
    * @param status The status to filter by (all, active, completed)
    */
   async filterByStatus(status: 'all' | 'active' | 'completed'): Promise<void> {
-    switch(status) {
+    switch (status) {
       case 'all':
         await this.filterAll.click();
         break;
