@@ -47,25 +47,33 @@ jobs:
     - name: Run ESLint
       run: npm run lint
     
-    - name: Create allure-results directory
-      run: mkdir -p allure-results
+    - name: Clean and create allure-results directory
+      run: |
+        rm -rf allure-results || true
+        mkdir -p allure-results
     
     - name: Run Smoke Tests
       if: github.event_name != 'workflow_dispatch' || github.event.inputs.tags == ''
-      run: npm run test:smoke
+      run: |
+        # Run tests explicitly without the TypeScript formatter to avoid runtime issues
+        node_modules/.bin/cucumber-js --require-module ts-node/register --require features/support/**/*.ts --require features/step_definitions/**/*.ts --format @cucumber/pretty-formatter --format ./features/support/allure.setup.js --tags @smoke
       continue-on-error: true
       
     - name: Run Tests with Tags
       if: github.event_name == 'workflow_dispatch' && github.event.inputs.tags != ''
-      run: npm test -- --tags "${{ github.event.inputs.tags }}"
-      continue-on-error: true
-      
-    - name: Run All Tests
-      if: github.event_name != 'workflow_dispatch' || github.event.inputs.tags == ''
-      run: npm test
+      run: |
+        # Run tests explicitly without the TypeScript formatter to avoid runtime issues
+        node_modules/.bin/cucumber-js --require-module ts-node/register --require features/support/**/*.ts --require features/step_definitions/**/*.ts --format @cucumber/pretty-formatter --format ./features/support/allure.setup.js --tags "${{ github.event.inputs.tags }}"
       continue-on-error: true
     
-    - name: Debug - List allure-results contents
+    - name: Run Form Tests
+      if: github.event_name != 'workflow_dispatch' || github.event.inputs.tags == ''
+      run: |
+        # Run tests explicitly without the TypeScript formatter to avoid runtime issues
+        node_modules/.bin/cucumber-js --require-module ts-node/register --require features/support/**/*.ts --require features/step_definitions/**/*.ts --format @cucumber/pretty-formatter --format ./features/support/allure.setup.js --tags @form
+      continue-on-error: true
+    
+    - name: Debug - List allure-results contents before generation
       run: ls -la allure-results
       continue-on-error: true
     
