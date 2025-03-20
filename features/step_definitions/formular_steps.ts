@@ -1,39 +1,81 @@
-import { Given, When, Then, DataTable } from '@cucumber/cucumber';
-//import { expect } from '@playwright/test';
+import { Given, When, Then } from '@cucumber/cucumber';
+import { expect } from '@playwright/test';
 import { ICustomWorld } from '../support/custom-world';
 
-// Form steps
-Given('ich bin auf der Formular-Demo-Seite', async function (this: ICustomWorld) {
+Given('I navigate to the text-box demo page', async function (this: ICustomWorld) {
     if (!this.formPage) throw new Error('FormPage is not defined');
     await this.formPage.navigate();
 });
 
-When('ich {string} als Nachricht eingebe', async function (this: ICustomWorld, _message: string) {
+When('I fill out the form with following details:', async function (this: ICustomWorld, dataTable) {
     if (!this.formPage) throw new Error('FormPage is not defined');
-    await this.formPage.fillMessage(_message);
-    await this.formPage.waitForPageLoad();
+    const data = dataTable.rowsHash();
+    await this.formPage.fillForm(
+        data['Full Name'],
+        data['Email'],
+        data['Current Address'],
+        data['Permanent Address']
+    );
 });
 
-When('ich auf dem Formular auf {string} klicke', async function (this: ICustomWorld, buttonName: string) {
+When('I fill in {string} as my full name', async function (this: ICustomWorld, name: string) {
     if (!this.formPage) throw new Error('FormPage is not defined');
-    await this.formPage.clickButton(buttonName);
+    await this.formPage.fillFullName(name);
 });
 
-Then('sollte die Nachricht {string} angezeigt werden', async function (this: ICustomWorld, _message: string) {
+When('I fill in {string} as my email', async function (this: ICustomWorld, email: string) {
     if (!this.formPage) throw new Error('FormPage is not defined');
-    await this.formPage.verifyMessage();
-    await this.formPage.waitForPageLoad();
+    await this.formPage.fillEmail(email);
 });
 
-// Numeric form steps
-When('ich folgende Zahlen eingebe:', async function (this: ICustomWorld, _dataTable: DataTable) {
+When('I fill in {string} as my current address', async function (this: ICustomWorld, address: string) {
     if (!this.formPage) throw new Error('FormPage is not defined');
-    await this.formPage.fillNumbers(1, 2); // Mock implementation
-    await this.formPage.waitForPageLoad();
+    await this.formPage.fillCurrentAddress(address);
 });
 
-Then('sollte das Ergebnis {string} sein', async function (this: ICustomWorld, _result: string) {
+When('I fill in {string} as my permanent address', async function (this: ICustomWorld, address: string) {
     if (!this.formPage) throw new Error('FormPage is not defined');
-    await this.formPage.verifyResult();
-    await this.formPage.waitForPageLoad();
+    await this.formPage.fillPermanentAddress(address);
+});
+
+When('I submit the form', async function (this: ICustomWorld) {
+    if (!this.formPage) throw new Error('FormPage is not defined');
+    await this.formPage.submitForm();
+});
+
+Then('I should see all my information displayed correctly', async function (this: ICustomWorld) {
+    if (!this.formPage) throw new Error('FormPage is not defined');
+    const isOutputVisible = await this.formPage.verifyOutputIsVisible();
+    expect(isOutputVisible).toBeTruthy();
+
+    // Verify output contains the correct information
+    const name = await this.formPage.getOutputName();
+    expect(name).toContain('John Doe');
+
+    const email = await this.formPage.getOutputEmail();
+    expect(email).toContain('john.doe@example.com');
+
+    const currentAddress = await this.formPage.getOutputCurrentAddress();
+    expect(currentAddress).toContain('123 Main Street');
+
+    const permanentAddress = await this.formPage.getOutputPermanentAddress();
+    expect(permanentAddress).toContain('456 Second Avenue');
+});
+
+Then('I should see my name {string} displayed in the output', async function (this: ICustomWorld, expectedName: string) {
+    if (!this.formPage) throw new Error('FormPage is not defined');
+    const name = await this.formPage.getOutputName();
+    expect(name).toContain(expectedName);
+});
+
+Then('I should see my email {string} displayed in the output', async function (this: ICustomWorld, expectedEmail: string) {
+    if (!this.formPage) throw new Error('FormPage is not defined');
+    const email = await this.formPage.getOutputEmail();
+    expect(email).toContain(expectedEmail);
+});
+
+Then('I should see email validation errors', async function (this: ICustomWorld) {
+    if (!this.formPage) throw new Error('FormPage is not defined');
+    const hasError = await this.formPage.hasEmailValidationError();
+    expect(hasError).toBeTruthy();
 }); 

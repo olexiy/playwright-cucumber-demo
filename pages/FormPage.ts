@@ -2,141 +2,145 @@ import { Locator, Page } from '@playwright/test';
 import BasePage from './BasePage';
 
 export default class FormPage extends BasePage {
-  // URL
-  readonly baseUrl = '/form/';
+    // URL
+    readonly baseUrl = 'https://demoqa.com/text-box';
 
-  // Locators
-  readonly nameInput: Locator;
-  readonly emailInput: Locator;
-  readonly messageInput: Locator;
-  readonly submitButton: Locator;
-  readonly resultMessage: Locator;
-  readonly form: Locator;
-  readonly valueButton: Locator;
-  readonly sumButton: Locator;
-  readonly firstNumberInput: Locator;
-  readonly secondNumberInput: Locator;
-  readonly resultValue: Locator;
+    // Locators
+    readonly fullNameInput: Locator;
+    readonly emailInput: Locator;
+    readonly currentAddressInput: Locator;
+    readonly permanentAddressInput: Locator;
+    readonly submitButton: Locator;
+    readonly form: Locator;
+    readonly outputName: Locator;
+    readonly outputEmail: Locator;
+    readonly outputCurrentAddress: Locator;
+    readonly outputPermanentAddress: Locator;
+    readonly outputBox: Locator;
 
-  constructor(page: Page) {
-    super(page);
+    constructor(page: Page) {
+        super(page);
 
-    // Initialize locators
-    this.form = page.locator('form');
-    this.nameInput = page.locator('#name');
-    this.emailInput = page.locator('#email');
-    this.messageInput = page.locator('#message');
-    this.submitButton = page.locator('button[type="submit"]');
-    this.resultMessage = page.locator('.result-message');
-    this.valueButton = page.locator('button:text("Wert abrufen")');
-    this.sumButton = page.locator('button:text("Summe berechnen")');
-    this.firstNumberInput = page.locator('#first-number');
-    this.secondNumberInput = page.locator('#second-number');
-    this.resultValue = page.locator('#result');
-  }
+        // Initialize locators
+        this.form = page.locator('#userForm');
+        this.fullNameInput = page.locator('#userName');
+        this.emailInput = page.locator('#userEmail');
+        this.currentAddressInput = page.locator('#currentAddress');
+        this.permanentAddressInput = page.locator('#permanentAddress');
+        this.submitButton = page.locator('#submit');
+        this.outputBox = page.locator('#output');
+        this.outputName = page.locator('#output #name');
+        this.outputEmail = page.locator('#output #email');
+        this.outputCurrentAddress = page.locator('#output #currentAddress');
+        this.outputPermanentAddress = page.locator('#output #permanentAddress');
+    }
 
-  /**
+    /**
      * Navigate to the form page
      */
-  async navigate(url = this.baseUrl): Promise<void> {
-    await super.navigate(url);
-    await this.waitForPageLoad();
-  }
+    async navigate(url = this.baseUrl): Promise<void> {
+        await this.page.goto(url);
+        await this.waitForPageLoad();
+    }
 
-  /**
+    /**
      * Wait for page to load
      */
-  async waitForPageLoad(): Promise<void> {
-    await this.form.waitFor({ state: 'visible' });
-  }
+    async waitForPageLoad(): Promise<void> {
+        await this.form.waitFor({ state: 'visible' });
+    }
 
-  /**
+    /**
      * Fill the form with the provided data
-     * @param name The name to fill in
-     * @param email The email to fill in
-     * @param message The message to fill in
      */
-  async fillForm(name: string, email: string, message: string): Promise<void> {
-    await this.nameInput.fill(name);
-    await this.emailInput.fill(email);
-    await this.messageInput.fill(message);
-  }
+    async fillForm(fullName: string, email: string, currentAddress: string, permanentAddress: string): Promise<void> {
+        await this.fullNameInput.fill(fullName);
+        await this.emailInput.fill(email);
+        await this.currentAddressInput.fill(currentAddress);
+        await this.permanentAddressInput.fill(permanentAddress);
+    }
 
-  /**
-     * Fill only the message input
-     * @param message The message to fill in
+    /**
+     * Fill only the name input
      */
-  async fillMessage(message: string): Promise<void> {
-    await this.messageInput.fill(message);
-  }
+    async fillFullName(name: string): Promise<void> {
+        await this.fullNameInput.fill(name);
+    }
 
-  /**
+    /**
+     * Fill only the email input
+     */
+    async fillEmail(email: string): Promise<void> {
+        await this.emailInput.fill(email);
+    }
+
+    /**
+     * Fill only the current address input
+     */
+    async fillCurrentAddress(address: string): Promise<void> {
+        await this.currentAddressInput.fill(address);
+    }
+
+    /**
+     * Fill only the permanent address input
+     */
+    async fillPermanentAddress(address: string): Promise<void> {
+        await this.permanentAddressInput.fill(address);
+    }
+
+    /**
      * Submit the form
      */
-  async submitForm(): Promise<void> {
-    await this.submitButton.click();
-  }
-
-  /**
-     * Click a button by its name
-     * @param buttonName The name of the button to click
-     */
-  async clickButton(buttonName: string): Promise<void> {
-    switch (buttonName) {
-      case 'Wert abrufen':
-        await this.valueButton.click();
-        break;
-      case 'Summe berechnen':
-        await this.sumButton.click();
-        break;
-      default:
-        await this.page.locator(`button:text("${buttonName}")`).click();
+    async submitForm(): Promise<void> {
+        await this.submitButton.click();
+        // Small delay to allow the output to render
+        await this.page.waitForTimeout(500);
     }
-  }
 
-  /**
-     * Verify that a message is displayed
+    /**
+     * Verify that output is displayed
      */
-  async verifyMessage(): Promise<string> {
-    await this.resultMessage.waitFor({ state: 'visible' });
-    return await this.resultMessage.textContent() || '';
-  }
+    async verifyOutputIsVisible(): Promise<boolean> {
+        return await this.outputBox.isVisible();
+    }
 
-  /**
-     * Fill number inputs for calculation
-     * @param first The first number
-     * @param second The second number
+    /**
+     * Get the output name text
      */
-  async fillNumbers(first: number, second: number): Promise<void> {
-    await this.firstNumberInput.fill(String(first));
-    await this.secondNumberInput.fill(String(second));
-  }
+    async getOutputName(): Promise<string> {
+        const content = await this.outputName.textContent();
+        return content ? content.replace('Name:', '').trim() : '';
+    }
 
-  /**
-     * Verify the calculation result
+    /**
+     * Get the output email text
      */
-  async verifyResult(): Promise<string> {
-    await this.resultValue.waitFor({ state: 'visible' });
-    return await this.resultValue.textContent() || '';
-  }
+    async getOutputEmail(): Promise<string> {
+        const content = await this.outputEmail.textContent();
+        return content ? content.replace('Email:', '').trim() : '';
+    }
 
-  /**
-       * Check if form validation error is displayed for a specific field
-       * @param fieldName The name of the field to check
-       * @returns True if validation error is displayed, false otherwise
-       */
-  async hasValidationError(fieldName: string): Promise<boolean> {
-    const field = this.page.locator(`#${fieldName}`);
-    return await field.evaluate((el: HTMLInputElement) => el.validity.valid === false);
-  }
+    /**
+     * Get the output current address text
+     */
+    async getOutputCurrentAddress(): Promise<string> {
+        const content = await this.outputCurrentAddress.textContent();
+        return content ? content.replace('Current Address :', '').trim() : '';
+    }
 
-  /**
-       * Get validation message for a field
-       * @param fieldName The name of the field
-       * @returns The validation message
-       */
-  async getValidationMessage(fieldName: string): Promise<string> {
-    const field = this.page.locator(`#${fieldName}`);
-    return await field.evaluate((el: HTMLInputElement) => el.validationMessage);
-  }
+    /**
+     * Get the output permanent address text
+     */
+    async getOutputPermanentAddress(): Promise<string> {
+        const content = await this.outputPermanentAddress.textContent();
+        return content ? content.replace('Permananet Address :', '').trim() : '';
+    }
+
+    /**
+     * Check if email input has validation error
+     */
+    async hasEmailValidationError(): Promise<boolean> {
+        const className = await this.emailInput.getAttribute('class');
+        return className ? className.includes('field-error') : false;
+    }
 } 

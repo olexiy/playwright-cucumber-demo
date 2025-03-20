@@ -5,7 +5,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 let browser: Browser;
-const BASE_URL = 'https://demo.playwright.dev';
+const PLAYWRIGHT_DEMO_URL = 'https://demo.playwright.dev';
+const DEMOQA_URL = 'https://demoqa.com';
 
 BeforeAll(async function () {
   browser = await chromium.launch({ headless: false });
@@ -15,10 +16,19 @@ AfterAll(async function () {
   await browser.close();
 });
 
-Before(async function (this: CustomWorld) {
+Before(async function (this: CustomWorld, { pickle }) {
+  // Determine baseURL based on test tags
+  const tags = pickle.tags.map(tag => tag.name);
+  let baseURL = PLAYWRIGHT_DEMO_URL;
+
+  // If it's a form test, use the DemoQA URL
+  if (tags.includes('@form')) {
+    baseURL = DEMOQA_URL;
+  }
+
   this.browser = browser;
   this.context = await browser.newContext({
-    baseURL: BASE_URL
+    baseURL: baseURL
   });
   this.page = await this.context.newPage();
 
