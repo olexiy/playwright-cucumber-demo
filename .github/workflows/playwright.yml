@@ -53,25 +53,40 @@ jobs:
         mkdir -p allure-results
     
     - name: Run Smoke Tests
+      id: smoke_tests
       if: github.event_name != 'workflow_dispatch' || github.event.inputs.tags == ''
       run: |
-        # Run tests explicitly without the TypeScript formatter to avoid runtime issues
+        # Run tests explicitly using the JS formatter to avoid TypeScript issues
         node_modules/.bin/cucumber-js --require-module ts-node/register --require features/support/**/*.ts --require features/step_definitions/**/*.ts --format @cucumber/pretty-formatter --format ./features/support/allure.setup.js --tags @smoke
       continue-on-error: true
       
     - name: Run Tests with Tags
+      id: tag_tests
       if: github.event_name == 'workflow_dispatch' && github.event.inputs.tags != ''
       run: |
-        # Run tests explicitly without the TypeScript formatter to avoid runtime issues
+        # Run tests explicitly using the JS formatter to avoid TypeScript issues
         node_modules/.bin/cucumber-js --require-module ts-node/register --require features/support/**/*.ts --require features/step_definitions/**/*.ts --format @cucumber/pretty-formatter --format ./features/support/allure.setup.js --tags "${{ github.event.inputs.tags }}"
       continue-on-error: true
     
     - name: Run Form Tests
+      id: form_tests
       if: github.event_name != 'workflow_dispatch' || github.event.inputs.tags == ''
       run: |
-        # Run tests explicitly without the TypeScript formatter to avoid runtime issues
+        # Run tests explicitly using the JS formatter to avoid TypeScript issues
         node_modules/.bin/cucumber-js --require-module ts-node/register --require features/support/**/*.ts --require features/step_definitions/**/*.ts --format @cucumber/pretty-formatter --format ./features/support/allure.setup.js --tags @form
       continue-on-error: true
+    
+    - name: Check if any tests ran successfully
+      id: test_status
+      run: |
+        if [ -z "$(ls -A allure-results)" ]; then
+          echo "No test results found in allure-results directory. Tests failed or did not run."
+          echo "test_success=false" >> $GITHUB_OUTPUT
+          exit 1
+        else
+          echo "Test results found in allure-results directory."
+          echo "test_success=true" >> $GITHUB_OUTPUT
+        fi
     
     - name: Debug - List allure-results contents before generation
       run: ls -la allure-results
