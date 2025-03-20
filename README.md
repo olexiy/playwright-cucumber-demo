@@ -1,6 +1,6 @@
-# Playwright TypeScript Project
+# Playwright Cucumber TypeScript Project
 
-This project demonstrates end-to-end testing using Playwright with TypeScript, including both UI and API testing capabilities, along with Allure reporting.
+This project demonstrates behavior-driven testing using Playwright with Cucumber and TypeScript, including Page Object Pattern implementation, along with Allure reporting.
 
 ## Prerequisites
 
@@ -22,19 +22,21 @@ npm install
 npm test
 ```
 
-### Run tests with UI mode
-```bash
-npm run test:ui
-```
-
 ### Run tests in headed mode
 ```bash
 npm run test:headed
 ```
 
-### Run tests in debug mode
+### Run tests with specific tags
 ```bash
+# Run all tests with @smoke tag
+npm run test:smoke
+
+# Run debug tests
 npm run test:debug
+
+# Run tests with custom tags
+npm test -- --tags "@todo and not @edit"
 ```
 
 ## Allure Reporting
@@ -56,8 +58,16 @@ npm run report:serve
 
 ## Project Structure
 
-- `tests/` - Contains all test files
-  - `demo.spec.ts` - Demo tests including UI and API examples
+- `features/` - Contains all feature files (Gherkin syntax)
+  - `todo.feature` - Todo app test scenarios
+  - `failing.feature` - Intentionally failing tests for report demonstration
+  - `formular.feature` - Form handling tests (pending)
+  - `step_definitions/` - Contains all step implementations
+  - `support/` - Contains hooks and custom world setup
+- `pages/` - Contains Page Object Pattern implementation
+  - `BasePage.ts` - Base page with common methods
+  - `TodoPage.ts` - Todo app page object
+  - `FormPage.ts` - Form handling page object
 - `playwright.config.ts` - Playwright configuration
 - `allure-results/` - Contains raw Allure report data
 - `allure-report/` - Contains generated Allure reports
@@ -65,10 +75,11 @@ npm run report:serve
 ## Test Examples
 
 The project includes examples of:
-- UI testing using the Playwright demo site
-- API testing using JSONPlaceholder
-- Form handling
-- Todo list interactions
+- Todo list interactions with Page Object Pattern
+- Intentionally failing tests for report demonstration
+- Tagging features and scenarios for selective test runs
+- Custom world setup for Cucumber with Playwright
+- Hooks for screenshot capture on test failures
 - Allure reporting integration
 
 ## CI/CD

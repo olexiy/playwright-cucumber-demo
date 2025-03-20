@@ -1,4 +1,5 @@
 # language: de
+@failing @debug
 Funktionalität: Absichtlich fehlschlagende Tests
   Als Tester möchte ich fehlschlagende Tests sehen
   um Fehlerberichte und Screenshots zu überprüfen

@@ -1,8 +1,10 @@
 # language: de
+@todo @ui
 Funktionalität: Todo-Liste Verwaltung
   Als Benutzer möchte ich meine Aufgaben verwalten können
   um meine täglichen Aktivitäten zu organisieren
 
+  @add @smoke
   Szenario: Neue Aufgabe hinzufügen und als erledigt markieren
     Angenommen ich bin auf der TodoMVC Seite
     Wenn ich "Playwright lernen" als neue Aufgabe eingebe
@@ -10,6 +12,7 @@ Funktionalität: Todo-Liste Verwaltung
     Wenn ich die Aufgabe als erledigt markiere
     Dann sollte die Aufgabe als erledigt angezeigt werden
 
+  @filter
   Szenario: Aufgaben nach Status filtern
     Angenommen ich bin auf der TodoMVC Seite
     Und ich habe folgende Aufgaben eingegeben:
@@ -25,6 +28,7 @@ Funktionalität: Todo-Liste Verwaltung
     Dann sollte ich 1 Aufgabe sehen
     Und "Tests schreiben" sollte sichtbar sein
 
+  @edit
   Szenario: Aufgabe bearbeiten
     Angenommen ich bin auf der TodoMVC Seite
     Und ich habe "Playwright lernen" als Aufgabe eingegeben
@@ -32,6 +36,7 @@ Funktionalität: Todo-Liste Verwaltung
     Und ich den Text zu "Playwright meistern" ändere
     Dann sollte die Aufgabe als "Playwright meistern" angezeigt werden
 
+  @complete @clear @smoke
   Szenario: Alle Aufgaben als erledigt markieren und löschen
     Angenommen ich bin auf der TodoMVC Seite
     Und ich habe folgende Aufgaben eingegeben:

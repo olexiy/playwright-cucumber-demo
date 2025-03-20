@@ -4,14 +4,13 @@
   "description": "Playwright TypeScript project with Allure reporting and Cucumber",
   "main": "index.js",
   "scripts": {
-    "test": "playwright test",
-    "test:ui": "playwright test --ui",
-    "test:headed": "playwright test --headed",
-    "test:debug": "playwright test --debug",
+    "test": "cucumber-js --require-module ts-node/register --require features/step_definitions/**/*.ts --require features/support/**/*.ts",
+    "test:headed": "cucumber-js --require-module ts-node/register --require features/step_definitions/**/*.ts --require features/support/**/*.ts",
+    "test:debug": "cucumber-js --require-module ts-node/register --require features/step_definitions/**/*.ts --require features/support/**/*.ts --tags @debug",
     "report:generate": "allure generate ./allure-results --clean",
     "report:open": "allure open ./allure-report",
     "report:serve": "allure serve ./allure-results",
-    "test:cucumber": "cucumber-js --require-module ts-node/register --require features/**/*.ts"
+    "test:smoke": "cucumber-js --require-module ts-node/register --require features/step_definitions/**/*.ts --require features/support/**/*.ts --tags @smoke"
   },
   "keywords": [],
   "author": "",
