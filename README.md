@@ -161,50 +161,42 @@ This project implements the Page Object Pattern, which:
 The project includes GitHub Actions workflow for continuous integration:
 
 - **Automated test execution**: Tests run automatically on push and pull requests
+- **Manual test execution**: Tests can be triggered manually with custom parameters
 - **Cross-browser testing**: Tests run on multiple browser environments
-- **Test reports**: Allure reports are generated and archived
+- **Test reports**: Allure reports are generated and published to GitHub Pages
 - **Failure notifications**: Alert the team when tests fail
 
-To set up GitHub Actions:
+### Setting Up GitHub Actions and GitHub Pages
 
-1. Navigate to the Actions tab in your GitHub repository
-2. Enable workflows
-3. Customize the provided `.github/workflows/playwright.yml` file if needed
+To set up GitHub Actions and GitHub Pages for this project:
 
-### Example GitHub Actions Workflow
+1. Navigate to the **Settings** tab in your GitHub repository
+2. Select **Pages** from the left sidebar
+3. Under **Source**, select the **gh-pages** branch
+4. Click **Save**
 
-```yaml
-name: Playwright Tests
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 18
-    - name: Install dependencies
-      run: npm ci
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-    - name: Run tests
-      run: npm test
-    - name: Generate Allure Report
-      if: always()
-      run: npm run report:generate
-    - name: Upload Allure Report
-      uses: actions/upload-artifact@v3
-      if: always()
-      with:
-        name: allure-report
-        path: allure-report/
-        retention-days: 30
-```
+After configuring GitHub Pages, your Allure reports will be automatically published at:
+`https://[your-username].github.io/[repository-name]/`
+
+### Manually Triggering Tests
+
+You can manually trigger the test workflow:
+
+1. Go to the **Actions** tab in your GitHub repository
+2. Select **Playwright Cucumber Tests** workflow
+3. Click **Run workflow**
+4. Enter optional parameters:
+   - Select a browser (chromium, firefox, webkit)
+   - Specify tags to run specific tests (e.g., @smoke, @form)
+5. Click **Run workflow**
+
+### Viewing Allure Reports
+
+After each workflow run, the Allure report is automatically published to GitHub Pages.
+
+Access your latest test report at: **https://[your-username].github.io/[repository-name]/**
+
+This link will always show the latest test results from your most recent workflow run.
 
 ## Contributing
 

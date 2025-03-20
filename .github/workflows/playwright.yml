@@ -4,6 +4,22 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: 'Browser to run tests on'
+        required: true
+        default: 'chromium'
+        type: choice
+        options:
+          - chromium
+          - firefox
+          - webkit
+      tags:
+        description: 'Test tags to run (e.g. @smoke, @form)'
+        required: false
+        default: ''
+        type: string
 
 jobs:
   test:
@@ -29,10 +45,15 @@ jobs:
       run: npm run lint
     
     - name: Run Smoke Tests
+      if: github.event_name != 'workflow_dispatch' || github.event.inputs.tags == ''
       run: npm run test:smoke
       
+    - name: Run Tests with Tags
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.tags != ''
+      run: npm test -- --tags "${{ github.event.inputs.tags }}"
+      
     - name: Run All Tests
-      if: success() || failure()
+      if: (github.event_name != 'workflow_dispatch' || github.event.inputs.tags == '') && (success() || failure())
       run: npm test
     
     - name: Generate Allure Report
@@ -54,3 +75,30 @@ jobs:
         name: test-screenshots
         path: allure-results/*.png
         retention-days: 7
+
+  publish-report:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    
+    steps:
+    - name: Download Allure Report
+      uses: actions/download-artifact@v3
+      with:
+        name: allure-report
+        path: allure-report
+    
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./allure-report
+        publish_branch: gh-pages
+        keep_files: true
+        user_name: 'github-actions[bot]'
+        user_email: 'github-actions[bot]@users.noreply.github.com'
+        commit_message: 'Update Allure Report'
