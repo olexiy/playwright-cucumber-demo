@@ -49,9 +49,18 @@ jobs:
     
     - name: Clean and create allure-results directory
       run: |
+        # Remove any existing results and reports
         rm -rf allure-results
+        rm -rf allure-report
+        
+        # Create fresh directory
         mkdir -p allure-results
-        echo "Cleaned allure-results directory"
+        
+        # Add a marker file to verify directory creation
+        echo "Created at $(date)" > allure-results/init-marker.txt
+        
+        echo "Cleaned allure-results directory and created marker file"
+        ls -la allure-results
     
     - name: Run Form Tests
       id: form_tests
@@ -98,7 +107,23 @@ jobs:
     - name: Generate Allure Report
       run: |
         echo "Generating Allure report..."
+        # Verify allure-results directory exists and has content
+        if [ ! -d "allure-results" ] || [ -z "$(ls -A allure-results)" ]; then
+          echo "ERROR: allure-results directory is empty or missing"
+          mkdir -p allure-results
+          echo "Test execution failed to generate results" > allure-results/execution-failed.txt
+        fi
+        
+        # Generate the report
         allure generate allure-results --clean -o allure-report
+        
+        # Verify the report was generated successfully
+        if [ ! -d "allure-report" ] || [ ! -d "allure-report/data" ]; then
+          echo "ERROR: Allure report generation failed"
+          mkdir -p allure-report/data
+          echo "<html><body><h1>Report generation failed</h1></body></html>" > allure-report/index.html
+          echo '{"reportName":"Failed Report","testRuns":[]}' > allure-report/data/report.json
+        fi
       
     - name: List generated report files
       run: |
@@ -132,39 +157,68 @@ jobs:
         retention-days: 7
 
   publish-report:
-    needs: test
-    if: always()
+    name: Publish Allure Report to GitHub Pages
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
+    needs: test
     
     steps:
-    - name: Download Allure Report
-      uses: actions/download-artifact@v4
-      with:
-        name: allure-report
-        path: allure-report
-    
-    - name: List Allure Report Files
-      run: |
-        echo "Downloaded report contents:"
-        ls -la allure-report
-        echo "Data directory contents:"
-        ls -la allure-report/data || echo "No data directory found"
-    
-    - name: Setup Pages
-      uses: actions/configure-pages@v5
-      
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: 'allure-report'
-        
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+      - name: Download Allure Report Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report
+
+      - name: Check for empty or invalid report
+        run: |
+          echo "Verifying Allure report content..."
+          
+          # Check if the report data directory exists and has content
+          if [ ! -d "allure-report/data" ] || [ -z "$(ls -A allure-report/data 2>/dev/null)" ]; then
+            echo "WARNING: Empty or invalid Allure report detected"
+            
+            # Create a basic structure to prevent deployment failure
+            mkdir -p allure-report/data
+            
+            # Create a placeholder report.json
+            echo '{
+              "reportName": "Allure Report - No Test Results",
+              "testRuns": [],
+              "statistic": {"failed": 0, "broken": 0, "skipped": 0, "passed": 0, "unknown": 0, "total": 0},
+              "time": {"start": '$(date +%s%3N)', "stop": '$(date +%s%3N)', "duration": 0}
+            }' > allure-report/data/report.json
+            
+            # Create a readme explaining the issue
+            echo '<!DOCTYPE html>
+            <html>
+            <head>
+                <title>No Test Results Available</title>
+                <style>
+                    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+                    .error-box { background-color: #fff3cd; border: 1px solid #ffeeba; padding: 20px; border-radius: 5px; }
+                    h1 { color: #856404; }
+                </style>
+            </head>
+            <body>
+                <div class="error-box">
+                    <h1>No Test Results Available</h1>
+                    <p>The workflow did not generate any test results, or the report generation failed.</p>
+                    <p>Please check the workflow logs for more information.</p>
+                </div>
+            </body>
+            </html>' > allure-report/index.html
+          else
+            echo "Valid Allure report data found. Proceeding with deployment."
+            ls -la allure-report/data
+          fi
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: allure-report
+          clean: true # This will clean previous files on the gh-pages branch
+          clean-exclude: |
+            .git
+            .github
+          token: ${{ github.token }}
+          commit-message: "Publish Allure Report from workflow run ${{ github.run_number }}"
