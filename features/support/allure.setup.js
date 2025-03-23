@@ -14,11 +14,12 @@ if (!fs.existsSync(allureResultsDir)) {
 // Create environment.properties file for Allure
 const envProperties = `
 BROWSER=chromium
-ENVIRONMENT=local
+ENVIRONMENT=${process.env.CI ? 'CI' : 'local'}
 CUCUMBER_VERSION=${cucumberPkg.version}
 PLAYWRIGHT_VERSION=${playwrightPkg.version}
 NODE_VERSION=${process.version}
 OS=${process.platform}
+DATE=${new Date().toISOString()}
 `;
 
 fs.writeFileSync(
@@ -55,6 +56,14 @@ fs.writeFileSync(
 class AllureFormatter extends CucumberJSAllureFormatter {
   constructor(options) {
     const runtime = new AllureRuntime({ resultsDir: allureResultsDir });
+    
+    // Add a timestamp to ensure unique naming
+    const timestamp = new Date().toISOString().replace(/[:\.]/g, '-');
+    fs.writeFileSync(
+      path.join(allureResultsDir, `formatter-${timestamp}.csv`),
+      `Formatter initialized at ${timestamp}`
+    );
+    
     super(
       options,
       runtime,
@@ -62,10 +71,20 @@ class AllureFormatter extends CucumberJSAllureFormatter {
         labels: [
           { pattern: [/@epic:(.*)/], name: 'epic' },
           { pattern: [/@feature:(.*)/], name: 'feature' },
-          { pattern: [/@story:(.*)/], name: 'story' }
-        ]
+          { pattern: [/@story:(.*)/], name: 'story' },
+          { pattern: [/@smoke/], name: 'tag', value: 'smoke' },
+          { pattern: [/@form/], name: 'tag', value: 'form' },
+          { pattern: [/@validation/], name: 'tag', value: 'validation' }
+        ],
+        // Add suite name for better organization
+        setupAllureReporter: (reporter) => {
+          reporter.setCurrentSuite('Playwright Cucumber Tests');
+        }
       }
     );
+    
+    // Log the initialization
+    console.log(`Allure formatter initialized with results directory: ${allureResultsDir}`);
   }
 }
 

@@ -49,57 +49,63 @@ jobs:
     
     - name: Clean and create allure-results directory
       run: |
-        rm -rf allure-results || true
+        rm -rf allure-results
         mkdir -p allure-results
-    
-    - name: Run Smoke Tests
-      id: smoke_tests
-      if: github.event_name != 'workflow_dispatch' || github.event.inputs.tags == ''
-      run: |
-        # Run tests explicitly using the JS formatter to avoid TypeScript issues
-        node_modules/.bin/cucumber-js --require-module ts-node/register --require features/support/**/*.ts --require features/step_definitions/**/*.ts --format @cucumber/pretty-formatter --format ./features/support/allure.setup.js --tags @smoke
-      continue-on-error: true
-      
-    - name: Run Tests with Tags
-      id: tag_tests
-      if: github.event_name == 'workflow_dispatch' && github.event.inputs.tags != ''
-      run: |
-        # Run tests explicitly using the JS formatter to avoid TypeScript issues
-        node_modules/.bin/cucumber-js --require-module ts-node/register --require features/support/**/*.ts --require features/step_definitions/**/*.ts --format @cucumber/pretty-formatter --format ./features/support/allure.setup.js --tags "${{ github.event.inputs.tags }}"
-      continue-on-error: true
+        echo "Cleaned allure-results directory"
     
     - name: Run Form Tests
       id: form_tests
-      if: github.event_name != 'workflow_dispatch' || github.event.inputs.tags == ''
       run: |
-        # Run tests explicitly using the JS formatter to avoid TypeScript issues
+        echo "Running form tests..."
         node_modules/.bin/cucumber-js --require-module ts-node/register --require features/support/**/*.ts --require features/step_definitions/**/*.ts --format @cucumber/pretty-formatter --format ./features/support/allure.setup.js --tags @form
       continue-on-error: true
     
-    - name: Check if any tests ran successfully
-      id: test_status
+    - name: Run Smoke Tests
+      id: smoke_tests
       run: |
-        if [ -z "$(ls -A allure-results)" ]; then
-          echo "No test results found in allure-results directory. Tests failed or did not run."
-          echo "test_success=false" >> $GITHUB_OUTPUT
-          exit 1
+        echo "Running smoke tests..."
+        node_modules/.bin/cucumber-js --require-module ts-node/register --require features/support/**/*.ts --require features/step_definitions/**/*.ts --format @cucumber/pretty-formatter --format ./features/support/allure.setup.js --tags @smoke
+      continue-on-error: true
+      
+    - name: Run Tests with Tags (if specified)
+      id: tag_tests
+      if: github.event.inputs.tags != ''
+      run: |
+        echo "Running tests with tags: ${{ github.event.inputs.tags }}"
+        node_modules/.bin/cucumber-js --require-module ts-node/register --require features/support/**/*.ts --require features/step_definitions/**/*.ts --format @cucumber/pretty-formatter --format ./features/support/allure.setup.js --tags "${{ github.event.inputs.tags }}"
+      continue-on-error: true
+    
+    - name: List allure-results contents 
+      run: ls -la allure-results
+      
+    - name: Check if tests generated results
+      id: check_results
+      run: |
+        # Count json results files (not other files like environment.properties)
+        RESULT_COUNT=$(find allure-results -name "*-result.json" | wc -l)
+        echo "Found $RESULT_COUNT result files"
+        
+        if [ "$RESULT_COUNT" -gt 0 ]; then
+          echo "Tests generated results successfully."
+          echo "result_count=$RESULT_COUNT" >> $GITHUB_OUTPUT
+          exit 0
         else
-          echo "Test results found in allure-results directory."
-          echo "test_success=true" >> $GITHUB_OUTPUT
+          echo "No test result files found! Tests may have failed to run properly."
+          echo "result_count=0" >> $GITHUB_OUTPUT
+          exit 1
         fi
     
-    - name: Debug - List allure-results contents before generation
-      run: ls -la allure-results
-      continue-on-error: true
-    
     - name: Generate Allure Report
-      if: always()
-      run: allure generate allure-results --clean -o allure-report
-      continue-on-error: true
-    
-    - name: Debug - List allure-report contents
-      run: ls -la allure-report
-      continue-on-error: true
+      run: |
+        echo "Generating Allure report..."
+        allure generate allure-results --clean -o allure-report
+      
+    - name: List generated report files
+      run: |
+        echo "Allure report contents:"
+        ls -la allure-report
+        echo "Data directory contents:"
+        ls -la allure-report/data || echo "No data directory found"
     
     - name: Upload Allure Report
       uses: actions/upload-artifact@v4
@@ -145,7 +151,11 @@ jobs:
         path: allure-report
     
     - name: List Allure Report Files
-      run: ls -la allure-report
+      run: |
+        echo "Downloaded report contents:"
+        ls -la allure-report
+        echo "Data directory contents:"
+        ls -la allure-report/data || echo "No data directory found"
     
     - name: Setup Pages
       uses: actions/configure-pages@v5
